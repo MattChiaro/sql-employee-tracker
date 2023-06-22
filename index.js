@@ -1,7 +1,9 @@
 // housekeeping
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
+const figlet = require('figlet');
 const delay = ms => new Promise(res => setTimeout(res, ms));
+
 
 // create connection to db
 const db = mysql.createConnection(
@@ -11,9 +13,22 @@ const db = mysql.createConnection(
         password: '',
         database: 'employees_db'
     },
-    console.log('\x1b[35m', 'Connected to the employee_db database.')
+    console.log('\x1b[35m', 'Connected to the employee_db database.'),
+    figlet.text('Employee Manager v1', {
+        font: 'Standard',
+        horizontalLayout: 'default',
+        verticalLayout: 'default'
+    }, function (err, data) {
+        if (err) {
+            console.log('Something went wrong...');
+            console.dir(err);
+            return;
+        }
+    console.log("\x1b[31m", data)
+    })
 )
 
+//sql query for viewing all employees
 const allEmployeesQuery = `SELECT 
                          CONCAT(emp.first_name, ' ',emp.last_name) AS Name,
                          role.title AS Title,
@@ -220,7 +235,7 @@ const updateEmpMgrQs = [
         }
     }
 ]
-
+// prompts for viewing employees by department
 const viewEmpByDeptQs = [
     {
         type: 'list',
@@ -240,6 +255,16 @@ const viewEmpByDeptQs = [
         }
     }
 ]
+
+const deleteQs = [
+    {
+        type: 'list',
+        name: 'delete',
+        message: "Which would you like to delete?",
+        choices: ['Department', 'Role', 'Employee']
+    }
+]
+
 
 async function init() {
     await delay(1000);
