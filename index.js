@@ -11,7 +11,7 @@ const db = mysql.createConnection(
         password: '',
         database: 'employees_db'
     },
-    console.log('Connected to the employee_db database.')
+    console.log('\x1b[35m','Connected to the employee_db database.')
 )
 
 const allEmployees =`SELECT 
