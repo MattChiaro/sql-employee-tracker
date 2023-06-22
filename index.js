@@ -38,7 +38,9 @@ const initialQs = [
             'Add a department',
             'Add a role',
             'Add an employee',
-            'Update employee role'
+            'Update employee role',
+            'Quit'
+
         ]
     }
 ]
@@ -244,6 +246,10 @@ async function init() {
                             updateEmpRole();
                         })
                     break;
+                case 'Quit':
+                    console.log('\x1b[35m','Goodbye!')
+                    db.end();
+
 
             }
 
