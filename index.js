@@ -11,10 +11,10 @@ const db = mysql.createConnection(
         password: '',
         database: 'employees_db'
     },
-    console.log('\x1b[35m','Connected to the employee_db database.')
+    console.log('\x1b[35m', 'Connected to the employee_db database.')
 )
 
-const allEmployees =`SELECT 
+const allEmployees = `SELECT 
                          CONCAT(emp.first_name, ' ',emp.last_name) AS Name,
                          role.title AS Title,
                          role.salary AS Salary,
@@ -39,7 +39,8 @@ const initialQs = [
             'Add a role',
             'Add an employee',
             'Update employee role',
-            'View Employees by Manager',
+            'View employees by manager',
+            'Update employee manager',
             'Quit'
 
         ]
@@ -127,6 +128,25 @@ const addEmpQs = [
     }
 ]
 
+const viewEmpByMgrQs = [
+    {
+        type: 'list',
+        name: 'manager',
+        message: "Which manager's employees would you like to view?",
+        choices: function () {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT id, first_name, last_name FROM employee WHERE manager_id IS NOT NULL', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
+                        resolve(choices);
+                    }
+                });
+            });
+        }
+    }
+]
 
 const updateEmpQs = [
     {
@@ -156,6 +176,42 @@ const updateEmpQs = [
                         reject(err);
                     } else {
                         const choices = results.map(({ id, title }) => ({ name: title, value: id }));
+                        resolve(choices);
+                    }
+                });
+            });
+        }
+    }
+]
+
+const updateEmpMgrQs = [
+    {
+        type: 'list',
+        name: 'updateEmpMgr',
+        message: "Which employee's manager would you like to update?",
+        choices: function () {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT id, first_name, last_name FROM employee', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
+                        resolve(choices);
+                    }
+                });
+            });
+        }
+    }, {
+        type: 'list',
+        name: 'updateMgr',
+        message: "Who is the employee's new manager?",
+        choices: function () {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT id, first_name, last_name FROM employee', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
                         resolve(choices);
                     }
                 });
@@ -247,25 +303,8 @@ async function init() {
                             updateEmpRole();
                         })
                     break;
-                case 'View Employees by Manager':
-                    inquirer.prompt({
-                        type: 'list',
-                        name: 'manager',
-                        message: "Which manager's employees would you like to view?",
-                        choices: function () {
-                            return new Promise((resolve, reject) => {
-                                db.query('SELECT id, first_name, last_name FROM employee WHERE manager_id IS NOT NULL', function (err, results) {
-                                    if (err) {
-                                        reject(err);
-                                    } else {
-                                        const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
-                                        resolve(choices);
-                                    }
-                                });
-                            });
-                        }
-                    })
-
+                case 'View employees by manager':
+                    inquirer.prompt(viewEmpByMgrQs)
                         .then((data) => {
                             async function viewByManager() {
                                 db.query(`SELECT CONCAT(first_name, ' ', last_name) AS name FROM employee WHERE manager_id = ${data.manager}`, function (err, results) {
@@ -277,12 +316,23 @@ async function init() {
                             viewByManager();
                         })
                     break;
+                case 'Update employee manager':
+                    inquirer.prompt(updateEmpMgrQs)
+                        .then((data) => {
+                            async function updateEmpMgr() {
+                                db.query('UPDATE employee SET ? WHERE ?', [{ manager_id: data.updateMgr }, { id: data.updateEmpMgr }], function (err, results) {
+                                    if (err) { console.log(err) }
+                                    console.log(`Updated employee #${data.updateEmpMgr}'s manager to manager #${data.updateMgr}.`)
+                                    init();
+                                })
+                            }
+                            updateEmpMgr();
+                        })
+                    break;
                 case 'Quit':
-                    console.log('\x1b[35m','Goodbye!')
+                    console.log('\x1b[35m', 'Goodbye!')
                     db.end();
                     break;
-
-
 
             }
 
