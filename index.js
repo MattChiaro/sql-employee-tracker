@@ -14,7 +14,7 @@ const db = mysql.createConnection(
     console.log('\x1b[35m', 'Connected to the employee_db database.')
 )
 
-const allEmployees = `SELECT 
+const allEmployeesQuery = `SELECT 
                          CONCAT(emp.first_name, ' ',emp.last_name) AS Name,
                          role.title AS Title,
                          role.salary AS Salary,
@@ -263,7 +263,7 @@ async function init() {
                     init();
                     break;
                 case 'View all employees':
-                    db.query(allEmployees, function (err, results) {
+                    db.query(allEmployeesQuery, function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
                     })
