@@ -40,21 +40,22 @@ const initialQs = [
             'Add an employee',
             'Update employee role',
             'View employees by manager',
+            'View employees by department',
             'Update employee manager',
             'Quit'
 
         ]
     }
 ]
-
-const addDept = [
+// prompts for adding a department
+const addDeptQ = [
     {
         type: 'input',
         name: 'dept',
         message: 'Enter the name of the new department:'
     }
 ]
-
+// prompts for adding a role
 const addRoleQs = [
     {
         type: 'input',
@@ -82,7 +83,7 @@ const addRoleQs = [
         }
     }
 ]
-
+// prompts for adding an employee
 const addEmpQs = [
     {
         type: 'input',
@@ -127,7 +128,7 @@ const addEmpQs = [
         }
     }
 ]
-
+// prompts for viewing employees by mgr
 const viewEmpByMgrQs = [
     {
         type: 'list',
@@ -147,7 +148,7 @@ const viewEmpByMgrQs = [
         }
     }
 ]
-
+// prompts for updating an employee's role
 const updateEmpQs = [
     {
         type: 'list',
@@ -183,7 +184,7 @@ const updateEmpQs = [
         }
     }
 ]
-
+// prompts for updating an employee's manager
 const updateEmpMgrQs = [
     {
         type: 'list',
@@ -212,6 +213,26 @@ const updateEmpMgrQs = [
                         reject(err);
                     } else {
                         const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
+                        resolve(choices);
+                    }
+                });
+            });
+        }
+    }
+]
+
+const viewEmpByDeptQs = [
+    {
+        type: 'list',
+        name: 'department',
+        message: "Which department's employees would you like to view?",
+        choices: function () {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT id, name FROM department', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, name }) => ({ name: name, value: id }));
                         resolve(choices);
                     }
                 });
@@ -249,7 +270,7 @@ async function init() {
                     init();
                     break;
                 case 'Add a department':
-                    inquirer.prompt(addDept)
+                    inquirer.prompt(addDeptQ)
                         .then((data) => {
                             async function addDept() {
                                 db.query('INSERT INTO department SET ?', { name: data.dept }, function (err, results) {
@@ -314,6 +335,25 @@ async function init() {
                                 })
                             }
                             viewByManager();
+                        })
+                    break;
+                case 'View employees by department':
+                    inquirer.prompt(viewEmpByDeptQs)
+                        .then((data) => {
+                            async function viewByDept() {
+                                db.query(`
+                                SELECT
+                                CONCAT(first_name, ' ', last_name) AS name
+                                From employee
+                                RIGHT JOIN role ON employee.role_id = role.id
+                                WHERE role.department_id = ${data.department}`, function (err, results) {
+                                    if (err) { console.log(err) }
+                                    console.log(data.department)
+                                    console.table(results)
+                                    init();
+                                })
+                            }
+                            viewByDept();
                         })
                     break;
                 case 'Update employee manager':
