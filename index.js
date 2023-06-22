@@ -5,6 +5,7 @@ const figlet = require('figlet');
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
 const questions = require('./lib/questions');
+const queries = require('./lib/queries');
 
 
 // create connection to db
@@ -30,19 +31,6 @@ const db = mysql.createConnection(
     })
 )
 
-//sql query for viewing all employees
-const allEmployeesQuery = `SELECT 
-                         CONCAT(emp.first_name, ' ',emp.last_name) AS Name,
-                         role.title AS Title,
-                         role.salary AS Salary,
-                         department.name AS Department,
-                         CONCAT(mgr.first_name, ' ',mgr.last_name) AS Manager
-                         FROM employee emp
-                     LEFT JOIN role ON emp.role_id = role.id
-                     LEFT JOIN department on role.department_id = department.id
-                     LEFT JOIN employee mgr ON emp.manager_id = mgr.id;`
-
-
 async function init() {
     await delay(1000);
     inquirer.prompt(questions.initialQs)
@@ -50,7 +38,7 @@ async function init() {
             console.log(`You selected: ${data.action}`)
             switch (data.action) {
                 case 'View all departments':
-                    db.query('SELECT name FROM department', function (err, results) {
+                    db.query(queries.viewAllDepts, function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
 
@@ -58,14 +46,14 @@ async function init() {
                     init();
                     break;
                 case 'View all roles':
-                    db.query('SELECT title, salary FROM role', function (err, results) {
+                    db.query(queries.viewAllRoles, function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
                     })
                     init();
                     break;
                 case 'View all employees':
-                    db.query(allEmployeesQuery, function (err, results) {
+                    db.query(queries.allEmployeesQuery, function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
                     })
@@ -75,7 +63,7 @@ async function init() {
                     inquirer.prompt(questions.addDeptQ)
                         .then((data) => {
                             async function addDept() {
-                                db.query('INSERT INTO department SET ?', { name: data.dept }, function (err, results) {
+                                db.query(queries.addDept, { name: data.dept }, function (err, results) {
                                     if (err) { console.log(err) }
                                     console.log(`Added ${data.dept} to departments.`)
                                     init();
@@ -89,7 +77,7 @@ async function init() {
                     inquirer.prompt(questions.addRoleQs)
                         .then((data) => {
                             async function addRole() {
-                                db.query('INSERT INTO role SET ?', { title: data.newRoleTitle, salary: data.newRoleSalary, department_id: data.newRoleDept }, function (err) {
+                                db.query(queries.addRole, { title: data.newRoleTitle, salary: data.newRoleSalary, department_id: data.newRoleDept }, function (err) {
                                     if (err) { console.log(err); }
                                     console.log(`Added ${data.newRoleTitle} to roles.`);
                                     init();
@@ -104,7 +92,7 @@ async function init() {
                     inquirer.prompt(questions.addEmpQs)
                         .then((data) => {
                             async function addEmployee() {
-                                db.query('INSERT INTO employee SET ?', { first_name: data.newEmpFirst, last_name: data.newEmpLast, role_id: data.newEmpRole, manager_id: data.newEmpManager }, function (err) {
+                                db.query(queries.addEmployee, { first_name: data.newEmpFirst, last_name: data.newEmpLast, role_id: data.newEmpRole, manager_id: data.newEmpManager }, function (err) {
                                     if (err) { console.log(err) }
                                     console.log(`Added ${data.newEmpFirst} ${data.newEmpLast} to employees.`)
                                     init();
@@ -117,7 +105,7 @@ async function init() {
                     inquirer.prompt(questions.updateEmpQs)
                         .then((data) => {
                             async function updateEmpRole() {
-                                db.query('UPDATE employee SET ? WHERE ?', [{ role_id: data.updateRole }, { id: data.updateEmp }], function (err, results) {
+                                db.query(queries.updateEmployeeRole, [{ role_id: data.updateRole }, { id: data.updateEmp }], function (err, results) {
                                     if (err) { console.log(err) }
                                     console.log(`Updated employee #${data.updateEmp}'s role to Role #${data.updateRole}.`)
                                     init();
@@ -162,7 +150,7 @@ async function init() {
                     inquirer.prompt(questions.updateEmpMgrQs)
                         .then((data) => {
                             async function updateEmpMgr() {
-                                db.query('UPDATE employee SET ? WHERE ?', [{ manager_id: data.updateMgr }, { id: data.updateEmpMgr }], function (err, results) {
+                                db.query(queries.updateEmployeeMgr, [{ manager_id: data.updateMgr }, { id: data.updateEmpMgr }], function (err, results) {
                                     if (err) { console.log(err) }
                                     console.log(`Updated employee #${data.updateEmpMgr}'s manager to manager #${data.updateMgr}.`)
                                     init();
