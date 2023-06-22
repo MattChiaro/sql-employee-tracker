@@ -55,18 +55,16 @@ const addRoleQs = [
         message: 'Select the department of the new role:',
         choices: function () {
             return new Promise((resolve, reject) => {
-              // Perform the SQL query to retrieve the department names
-              db.query('SELECT id, name FROM department', function (err, results) {
-                if (err) {
-                  reject(err);
-                } else {
-                  // Extract the choices from the query results
-                  const choices = results.map(({ id, name }) => ({ name, value: id }));
-                  resolve(choices);
-                }
-              });
+                db.query('SELECT id, name FROM department', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, name }) => ({ name, value: id }));
+                        resolve(choices);
+                    }
+                });
             });
-          }
+        }
     }
 ]
 
@@ -83,12 +81,34 @@ const addEmpQs = [
         type: 'list',
         name: 'newEmpRole',
         message: "What is the new employee's role?",
-        choices: [db.query('SELECT title FROM role')]
+        choices: function () {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT id, title FROM role', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, title }) => ({ name: title, value: id }));
+                        resolve(choices);
+                    }
+                });
+            });
+        }
     }, {
         type: 'list',
         name: 'newEmpManager',
         message: "Who is the new employee's manager?",
-        choices: [db.query('SELECT first_name, last_name FROM employee')]
+        choices: function () {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT id, first_name, last_name FROM employee', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
+                        resolve(choices);
+                    }
+                });
+            });
+        }
     }
 ]
 
@@ -98,12 +118,34 @@ const updateEmpQs = [
         type: 'list',
         name: 'updateEmp',
         message: "Which employee's role would you like to update?",
-        choices: [db.query('SELECT first_name, last_name FROM employee')]
+        choices: function () {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT id, first_name, last_name FROM employee', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
+                        resolve(choices);
+                    }
+                });
+            });
+        }
     }, {
         type: 'list',
         name: 'updateRole',
         message: "What is the employee's new role?",
-        choices: [db.query('SELECT title FROM role')]
+        choices: function () {
+            return new Promise((resolve, reject) => {
+                db.query('SELECT id, title FROM role', function (err, results) {
+                    if (err) {
+                        reject(err);
+                    } else {
+                        const choices = results.map(({ id, title }) => ({ name: title, value: id }));
+                        resolve(choices);
+                    }
+                });
+            });
+        }
     }
 ]
 
@@ -164,22 +206,28 @@ async function init() {
                 case 'Add an employee':
                     inquirer.prompt(addEmpQs)
                         .then((data) => {
-                            db.query('INSERT INTO employee SET ?', { first_name: data.newEmpFirst, last_name: data.newEmpLast, role_id: data.newEmpRole, manager_id: data.newEmpManager }, function (err, results) {
+                            async function addEmployee() {
+                            db.query('INSERT INTO employee SET ?', { first_name: data.newEmpFirst, last_name: data.newEmpLast, role_id: data.newEmpRole, manager_id: data.newEmpManager }, function (err) {
                                 if (err) { console.log(err) }
                                 console.log(`Added ${data.newEmpFirst} ${data.newEmpLast} to employees.`)
+                                init();
                             })
+                        }
+                        addEmployee();
                         })
-                    init();
                     break;
                 case 'Update employee role':
                     inquirer.prompt(updateEmpQs)
                         .then((data) => {
-                            db.query('UPDATE employee SET ? WHERE ?', { role_id: data.updateRole }, { first_name: data.updateEmp }, function (err, results) {
+                            async function updateEmpRole() {
+                                db.query('UPDATE employee SET ? WHERE ?', [{ role_id: data.updateRole},{ id: data.updateEmp }], function (err, results) {
                                 if (err) { console.log(err) }
                                 console.log(`Updated ${data.updateEmp}'s role to ${data.updateRole}.`)
+                                init();
                             })
+                        }
+                        updateEmpRole();
                         })
-                    init();
                     break;
 
             }
