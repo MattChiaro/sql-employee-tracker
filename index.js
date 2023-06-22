@@ -2,6 +2,7 @@
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
 
+
 // create connection to db
 const db = mysql.createConnection(
     {
@@ -44,7 +45,7 @@ const addRoleQs = [
         type: 'input',
         name: 'newRoleTitle',
         message: 'Enter the title of the new role:'
-    },{
+    }, {
         type: 'input',
         name: 'newRoleSalary',
         message: 'Enter the salary of the new role:'
@@ -78,6 +79,7 @@ const addEmpQs = [
     }
 ]
 
+
 const updateEmpQs = [
     {
         type: 'list',
@@ -92,3 +94,71 @@ const updateEmpQs = [
     }
 ]
 
+async function init() {
+    await delay(1000);
+    inquirer.prompt(initialQs)
+        .then((data) => {
+            console.log(`You selected: ${data.action}`)
+            switch (data.action) {
+                case 'View all departments':
+                    db.query('SELECT * FROM department', function (err, results) {
+                        if (err) { console.log(err) }
+                        console.table(results)
+                        init();
+                    })
+                    break;
+                case 'View all roles':
+                    db.query('SELECT * FROM role', function (err, results) {
+                        if (err) { console.log(err) }
+                        console.table(results)
+                    })
+                    break;
+                case 'View all employees':
+                    db.query('SELECT * FROM employee', function (err, results) {
+                        if (err) { console.log(err) }
+                        console.table(results)
+                    })
+                    break;
+                case 'Add a department':
+                    inquirer.prompt(addDept)
+                        .then((data) => {
+                            db.query('INSERT INTO department SET ?', { name: data.dept }, function (err, results) {
+                                if (err) { console.log(err) }
+                                console.log(`Added ${data.dept} to departments.`)
+                            })
+                        })
+                    break;
+                case 'Add a role':
+                    inquirer.prompt(addRoleQs)
+                        .then((data) => {
+                            db.query('INSERT INTO role SET ?', { title: data.newRoleTitle, salary: data.newRoleSalary, department_id: data.newRoleDept }, function (err, results) {
+                                if (err) { console.log(err) }
+                                console.log(`Added ${data.newRoleTitle} to roles.`)
+                            })
+                        })
+                    break;
+                case 'Add an employee':
+                    inquirer.prompt(addEmpQs)
+                        .then((data) => {
+                            db.query('INSERT INTO employee SET ?', { first_name: data.newEmpFirst, last_name: data.newEmpLast, role_id: data.newEmpRole, manager_id: data.newEmpManager }, function (err, results) {
+                                if (err) { console.log(err) }
+                                console.log(`Added ${data.newEmpFirst} ${data.newEmpLast} to employees.`)
+                            })
+                        })
+                    break;
+                case 'Update employee role':
+                    inquirer.prompt(updateEmpQs)
+                        .then((data) => {
+                            db.query('UPDATE employee SET ? WHERE ?', { role_id: data.updateRole }, { first_name: data.updateEmp }, function (err, results) {
+                                if (err) { console.log(err) }
+                                console.log(`Updated ${data.updateEmp}'s role to ${data.updateRole}.`)
+                            })
+                        })
+                    break;
+
+            }
+
+        })
+}
+
+init();
