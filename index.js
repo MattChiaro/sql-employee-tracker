@@ -56,6 +56,39 @@ const addRoleQs = [
     }
 ]
 
-const addEmpQs = []
+const addEmpQs = [
+    {
+        type: 'input',
+        name: 'newEmpFirst',
+        message: "What is the new employee's first name?"
+    }, {
+        type: 'input',
+        name: 'newEmpLast',
+        message: "What is the new employee's last name?"
+    }, {
+        type: 'list',
+        name: 'newEmpRole',
+        message: "What is the new employee's role?",
+        choices: [db.query('SELECT title FROM role')]
+    }, {
+        type: 'list',
+        name: 'newEmpManager',
+        message: "Who is the new employee's manager?",
+        choices: [db.query('SELECT first_name, last_name FROM employee')]
+    }
+]
 
-const updateEmpQs = []
+const updateEmpQs = [
+    {
+        type: 'list',
+        name: 'updateEmp',
+        message: "Which employee's role would you like to update?",
+        choices: [db.query('SELECT first_name, last_name FROM employee')]
+    }, {
+        type: 'list',
+        name: 'updateRole',
+        message: "What is the employee's new role?",
+        choices: [db.query('SELECT title FROM role')]
+    }
+]
+
