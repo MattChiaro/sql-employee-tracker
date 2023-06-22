@@ -168,7 +168,7 @@ async function init() {
             console.log(`You selected: ${data.action}`)
             switch (data.action) {
                 case 'View all departments':
-                    db.query('SELECT * FROM department', function (err, results) {
+                    db.query('SELECT name FROM department', function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
 
@@ -176,7 +176,7 @@ async function init() {
                     init();
                     break;
                 case 'View all roles':
-                    db.query('SELECT * FROM role', function (err, results) {
+                    db.query('SELECT id, title, salary FROM role', function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
                     })
