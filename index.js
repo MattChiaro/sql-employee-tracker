@@ -15,8 +15,7 @@ const db = mysql.createConnection(
 )
 
 const allEmployees =`SELECT 
-                         emp.first_name AS First,
-                         emp.last_name AS Last,
+                         CONCAT(emp.first_name, ' ',emp.last_name) AS Name,
                          role.title AS Title,
                          role.salary AS Salary,
                          department.name AS Department,
