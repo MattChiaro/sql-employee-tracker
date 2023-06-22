@@ -4,6 +4,7 @@ const mysql = require('mysql2');
 const figlet = require('figlet');
 const delay = ms => new Promise(res => setTimeout(res, ms));
 
+// import questions and queries
 const questions = require('./lib/questions');
 const queries = require('./lib/queries');
 
@@ -162,6 +163,7 @@ async function init() {
                 case 'Quit':
                     console.log('\x1b[35m', 'Goodbye!')
                     db.end();
+                    process.exit();
                     break;
 
             }
