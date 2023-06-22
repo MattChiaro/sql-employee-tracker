@@ -1,7 +1,7 @@
 // housekeeping
 const inquirer = require('inquirer');
 const mysql = require('mysql2');
-
+const delay = ms => new Promise(res => setTimeout(res, ms));
 
 // create connection to db
 const db = mysql.createConnection(
@@ -53,7 +53,20 @@ const addRoleQs = [
         type: 'list',
         name: 'newRoleDept',
         message: 'Select the department of the new role:',
-        choices: [db.query('SELECT name FROM department')]
+        choices: function () {
+            return new Promise((resolve, reject) => {
+              // Perform the SQL query to retrieve the department names
+              db.query('SELECT id, name FROM department', function (err, results) {
+                if (err) {
+                  reject(err);
+                } else {
+                  // Extract the choices from the query results
+                  const choices = results.map(({ id, name }) => ({ name, value: id }));
+                  resolve(choices);
+                }
+              });
+            });
+          }
     }
 ]
 
@@ -104,20 +117,23 @@ async function init() {
                     db.query('SELECT * FROM department', function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
-                        init();
+
                     })
+                    init();
                     break;
                 case 'View all roles':
                     db.query('SELECT * FROM role', function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
                     })
+                    init();
                     break;
                 case 'View all employees':
                     db.query('SELECT * FROM employee', function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
                     })
+                    init();
                     break;
                 case 'Add a department':
                     inquirer.prompt(addDept)
@@ -126,16 +142,24 @@ async function init() {
                                 if (err) { console.log(err) }
                                 console.log(`Added ${data.dept} to departments.`)
                             })
+
                         })
+                    init();
                     break;
                 case 'Add a role':
                     inquirer.prompt(addRoleQs)
                         .then((data) => {
-                            db.query('INSERT INTO role SET ?', { title: data.newRoleTitle, salary: data.newRoleSalary, department_id: data.newRoleDept }, function (err, results) {
-                                if (err) { console.log(err) }
-                                console.log(`Added ${data.newRoleTitle} to roles.`)
-                            })
+                            async function addRole() {
+                                db.query('INSERT INTO role SET ?', { title: data.newRoleTitle, salary: data.newRoleSalary, department_id: data.newRoleDept }, function (err) {
+                                    if (err) { console.log(err); }
+                                    console.log(`Added ${data.newRoleTitle} to roles.`);
+                                    init();
+                                })
+                            }
+                            addRole();
+
                         })
+
                     break;
                 case 'Add an employee':
                     inquirer.prompt(addEmpQs)
@@ -145,6 +169,7 @@ async function init() {
                                 console.log(`Added ${data.newEmpFirst} ${data.newEmpLast} to employees.`)
                             })
                         })
+                    init();
                     break;
                 case 'Update employee role':
                     inquirer.prompt(updateEmpQs)
@@ -154,6 +179,7 @@ async function init() {
                                 console.log(`Updated ${data.updateEmp}'s role to ${data.updateRole}.`)
                             })
                         })
+                    init();
                     break;
 
             }
