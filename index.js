@@ -104,6 +104,7 @@ const addEmpQs = [
                         reject(err);
                     } else {
                         const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
+                        choices.push({ name: 'None', value: null }); //add the option for no manager
                         resolve(choices);
                     }
                 });
@@ -180,13 +181,16 @@ async function init() {
                 case 'Add a department':
                     inquirer.prompt(addDept)
                         .then((data) => {
-                            db.query('INSERT INTO department SET ?', { name: data.dept }, function (err, results) {
-                                if (err) { console.log(err) }
-                                console.log(`Added ${data.dept} to departments.`)
-                            })
-
+                            async function addDept() {
+                                db.query('INSERT INTO department SET ?', { name: data.dept }, function (err, results) {
+                                    if (err) { console.log(err) }
+                                    console.log(`Added ${data.dept} to departments.`)
+                                    init();
+                                })
+                            }
+                            addDept();
                         })
-                    init();
+
                     break;
                 case 'Add a role':
                     inquirer.prompt(addRoleQs)
@@ -207,26 +211,26 @@ async function init() {
                     inquirer.prompt(addEmpQs)
                         .then((data) => {
                             async function addEmployee() {
-                            db.query('INSERT INTO employee SET ?', { first_name: data.newEmpFirst, last_name: data.newEmpLast, role_id: data.newEmpRole, manager_id: data.newEmpManager }, function (err) {
-                                if (err) { console.log(err) }
-                                console.log(`Added ${data.newEmpFirst} ${data.newEmpLast} to employees.`)
-                                init();
-                            })
-                        }
-                        addEmployee();
+                                db.query('INSERT INTO employee SET ?', { first_name: data.newEmpFirst, last_name: data.newEmpLast, role_id: data.newEmpRole, manager_id: data.newEmpManager }, function (err) {
+                                    if (err) { console.log(err) }
+                                    console.log(`Added ${data.newEmpFirst} ${data.newEmpLast} to employees.`)
+                                    init();
+                                })
+                            }
+                            addEmployee();
                         })
                     break;
                 case 'Update employee role':
                     inquirer.prompt(updateEmpQs)
                         .then((data) => {
                             async function updateEmpRole() {
-                                db.query('UPDATE employee SET ? WHERE ?', [{ role_id: data.updateRole},{ id: data.updateEmp }], function (err, results) {
-                                if (err) { console.log(err) }
-                                console.log(`Updated ${data.updateEmp}'s role to ${data.updateRole}.`)
-                                init();
-                            })
-                        }
-                        updateEmpRole();
+                                db.query('UPDATE employee SET ? WHERE ?', [{ role_id: data.updateRole }, { id: data.updateEmp }], function (err, results) {
+                                    if (err) { console.log(err) }
+                                    console.log(`Updated employee #${data.updateEmp}'s role to Role #${data.updateRole}.`)
+                                    init();
+                                })
+                            }
+                            updateEmpRole();
                         })
                     break;
 
