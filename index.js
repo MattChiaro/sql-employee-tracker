@@ -39,6 +39,7 @@ const initialQs = [
             'Add a role',
             'Add an employee',
             'Update employee role',
+            'View Employees by Manager',
             'Quit'
 
         ]
@@ -178,7 +179,7 @@ async function init() {
                     init();
                     break;
                 case 'View all roles':
-                    db.query('SELECT id, title, salary FROM role', function (err, results) {
+                    db.query('SELECT title, salary FROM role', function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
                     })
@@ -246,9 +247,41 @@ async function init() {
                             updateEmpRole();
                         })
                     break;
+                case 'View Employees by Manager':
+                    inquirer.prompt({
+                        type: 'list',
+                        name: 'manager',
+                        message: "Which manager's employees would you like to view?",
+                        choices: function () {
+                            return new Promise((resolve, reject) => {
+                                db.query('SELECT id, first_name, last_name FROM employee WHERE manager_id IS NOT NULL', function (err, results) {
+                                    if (err) {
+                                        reject(err);
+                                    } else {
+                                        const choices = results.map(({ id, first_name, last_name }) => ({ name: `${first_name} ${last_name}`, value: id }));
+                                        resolve(choices);
+                                    }
+                                });
+                            });
+                        }
+                    })
+
+                        .then((data) => {
+                            async function viewByManager() {
+                                db.query(`SELECT CONCAT(first_name, ' ', last_name) AS name FROM employee WHERE manager_id = ${data.manager}`, function (err, results) {
+                                    if (err) { console.log(err) }
+                                    console.table(results)
+                                    init();
+                                })
+                            }
+                            viewByManager();
+                        })
+                    break;
                 case 'Quit':
                     console.log('\x1b[35m','Goodbye!')
                     db.end();
+                    break;
+
 
 
             }
