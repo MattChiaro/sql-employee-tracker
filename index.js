@@ -14,6 +14,18 @@ const db = mysql.createConnection(
     console.log('Connected to the employee_db database.')
 )
 
+const allEmployees =`SELECT 
+                         emp.first_name AS First,
+                         emp.last_name AS Last,
+                         role.title AS Title,
+                         role.salary AS Salary,
+                         department.name AS Department,
+                         CONCAT(mgr.first_name, ' ',mgr.last_name) AS Manager
+                         FROM employee emp
+                     LEFT JOIN role ON emp.role_id = role.id
+                     LEFT JOIN department on role.department_id = department.id
+                     LEFT JOIN employee mgr ON emp.manager_id = mgr.id;`
+
 // initial prompt that is repeated after each action
 const initialQs = [
     {
@@ -172,7 +184,7 @@ async function init() {
                     init();
                     break;
                 case 'View all employees':
-                    db.query('SELECT * FROM employee', function (err, results) {
+                    db.query(allEmployees, function (err, results) {
                         if (err) { console.log(err) }
                         console.table(results)
                     })
